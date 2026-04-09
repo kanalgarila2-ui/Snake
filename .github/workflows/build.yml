@@ -46,11 +46,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      # 5. Даём права на запуск gradlew
+      # 5. Скачиваем gradle-wrapper.jar если отсутствует
+      - name: Download gradle-wrapper.jar if missing
+        run: |
+          JAR="gradle/wrapper/gradle-wrapper.jar"
+          if [ ! -f "$JAR" ]; then
+            echo "gradle-wrapper.jar not found, downloading..."
+            curl -fsSL "https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar" -o "$JAR"
+            echo "Downloaded successfully"
+          else
+            echo "gradle-wrapper.jar already exists, skipping"
+          fi
+
+      # 6. Даём права на запуск gradlew
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 6. Сборка Debug APK
+      # 7. Сборка Debug APK
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
 
@@ -93,6 +105,18 @@ jobs:
       # 4. Права
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
+      # 4.5 Скачиваем jar если нет
+      - name: Download gradle-wrapper.jar if missing
+        run: |
+          JAR="gradle/wrapper/gradle-wrapper.jar"
+          if [ ! -f "$JAR" ]; then
+            echo "gradle-wrapper.jar not found, downloading..."
+            curl -fsSL "https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar" -o "$JAR"
+            echo "Downloaded successfully"
+          else
+            echo "gradle-wrapper.jar already exists, skipping"
+          fi
 
       # 5. Сборка Release APK (без подписи — debug-подпись)
       - name: Build Release APK
