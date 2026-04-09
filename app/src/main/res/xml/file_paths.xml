@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    file_paths.xml — пути для FileProvider.
+    Используется если приложению нужно шарить файлы (например default_sound.mp3)
+    с другими компонентами через content:// URI.
+-->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Внешнее хранилище -->
+    <external-path
+        name="external_files"
+        path="." />
+
+    <!-- Кэш приложения -->
+    <cache-path
+        name="cached_files"
+        path="." />
+
+    <!-- Директория TryaskaFon на SD-карте -->
+    <external-path
+        name="tryaskafon_dir"
+        path="TryaskaFon/" />
+</paths>

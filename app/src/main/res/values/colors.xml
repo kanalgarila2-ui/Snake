@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Основные цвета приложения ТряскаФон -->
+    <color name="primary">#FF6D00</color>
+    <color name="primary_dark">#E65100</color>
+    <color name="primary_light">#FF9E40</color>
+    <color name="accent">#FFD180</color>
+
+    <!-- Фон -->
+    <color name="background">#FAFAFA</color>
+    <color name="surface">#FFFFFF</color>
+
+    <!-- Текст -->
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="text_hint">#BDBDBD</color>
+
+    <!-- Разделитель -->
+    <color name="divider">#E0E0E0</color>
+
+    <!-- Статусы -->
+    <color name="status_running">#4CAF50</color>
+    <color name="status_stopped">#F44336</color>
+
+    <!-- Системные (для WindowManager) -->
+    <color name="colorPrimary">#FF6D00</color>
+    <color name="colorPrimaryDark">#E65100</color>
+    <color name="colorAccent">#FFD180</color>
+    <color name="colorPrimaryVariant">#E65100</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="colorSecondary">#FFD180</color>
+    <color name="colorSecondaryVariant">#FFB300</color>
+    <color name="colorOnSecondary">#000000</color>
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorOnSurface">#212121</color>
+    <color name="colorBackground">#FAFAFA</color>
+    <color name="colorOnBackground">#212121</color>
+    <color name="colorError">#B00020</color>
+    <color name="colorOnError">#FFFFFF</color>
+</resources>
