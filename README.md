@@ -159,5 +159,3 @@ git push origin v1.0
 ---
 
 *Сделано с любовью к тряске* 📳
-# Snake
-# Snake
