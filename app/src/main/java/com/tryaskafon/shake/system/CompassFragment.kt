@@ -123,7 +123,7 @@ class CompassView @JvmOverloads constructor(ctx: Context, attrs: AttributeSet? =
         // Буквы СЮВЗ
         val dirs = listOf("С" to 0f, "В" to 90f, "Ю" to 180f, "З" to 270f)
         dirs.forEach { (label, deg) ->
-            val angle = Math.toRadians(deg - azimuth)
+            val angle = Math.toRadians((deg - azimuth).toDouble())
             canvas.drawText(label,
                 cx + sin(angle).toFloat() * r * 0.55f,
                 cy - cos(angle).toFloat() * r * 0.55f + paintText.textSize / 3,
