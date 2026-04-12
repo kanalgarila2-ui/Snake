@@ -23,7 +23,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
-
+      - name: Download gradle-wrapper
+        run: |
+            curl -sL "https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar" \
+            -o gradle/wrapper/gradle-wrapper.jar
+     
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
