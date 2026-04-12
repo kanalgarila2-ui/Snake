@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/background">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp">
+
+        <!-- Иконка + заголовок -->
+        <ImageView
+            android:id="@+id/ivShakeIcon"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:src="@drawable/ic_shake"
+            app:tint="@color/primary"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/app_name" />
+
+        <!-- Главный переключатель -->
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchActivate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/activate_detector"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            app:layout_constraintTop_toBottomOf="@id/ivShakeIcon"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp" />
+
+        <!-- Статус -->
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/service_stopped"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:background="@drawable/bg_status"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="4dp"
+            app:layout_constraintTop_toBottomOf="@id/switchActivate"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp" />
+
+        <!-- Разделитель -->
+        <View android:id="@+id/div1"
+            android:layout_width="match_parent" android:layout_height="1dp"
+            android:background="@color/divider"
+            app:layout_constraintTop_toBottomOf="@id/tvStatus"
+            android:layout_marginTop="20dp" />
+
+        <!-- Поле пути к MP3 -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilFilePath"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            app:hintTextColor="@color/primary"
+            app:layout_constraintTop_toBottomOf="@id/div1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etFilePath"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/hint_file_path"
+                android:inputType="textUri"
+                android:textSize="13sp"
+                android:maxLines="2" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Кнопка выбора файла -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnPickFile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_pick_file"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            app:strokeColor="@color/primary"
+            android:textColor="@color/primary"
+            app:layout_constraintTop_toBottomOf="@id/tilFilePath"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="8dp" />
+
+        <!-- Разделитель -->
+        <View android:id="@+id/div2"
+            android:layout_width="match_parent" android:layout_height="1dp"
+            android:background="@color/divider"
+            app:layout_constraintTop_toBottomOf="@id/btnPickFile"
+            android:layout_marginTop="16dp" />
+
+        <!-- Статистика -->
+        <TextView
+            android:id="@+id/tvLastShake"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/last_shake_never"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary"
+            app:layout_constraintTop_toBottomOf="@id/div2"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="12dp" />
+
+        <TextView
+            android:id="@+id/tvShakeCount"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/shake_count_zero"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary"
+            app:layout_constraintTop_toBottomOf="@id/tvLastShake"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="4dp" />
+
+        <!-- ProgressBar громкости / воспроизведения -->
+        <TextView
+            android:id="@+id/labelVolume"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ВОСПРОИЗВЕДЕНИЕ"
+            android:textSize="11sp"
+            android:textColor="@color/text_secondary"
+            android:textAllCaps="true"
+            app:layout_constraintTop_toBottomOf="@id/tvShakeCount"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="14dp" />
+
+        <ProgressBar
+            android:id="@+id/progressBarVolume"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="10dp"
+            android:progress="0"
+            android:max="100"
+            android:progressTint="@color/primary"
+            android:progressBackgroundTint="@color/divider"
+            app:layout_constraintTop_toBottomOf="@id/labelVolume"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="4dp" />
+
+        <!-- Разделитель -->
+        <View android:id="@+id/div3"
+            android:layout_width="match_parent" android:layout_height="1dp"
+            android:background="@color/divider"
+            app:layout_constraintTop_toBottomOf="@id/progressBarVolume"
+            android:layout_marginTop="16dp" />
+
+        <!-- Чувствительность -->
+        <TextView
+            android:id="@+id/labelSensitivity"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="ЧУВСТВИТЕЛЬНОСТЬ"
+            android:textSize="11sp"
+            android:textColor="@color/text_secondary"
+            android:textAllCaps="true"
+            app:layout_constraintTop_toBottomOf="@id/div3"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:id="@+id/tvSensitivityValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="15 м/с²"
+            android:textSize="14sp"
+            android:textColor="@color/primary"
+            android:textStyle="bold"
+            app:layout_constraintTop_toBottomOf="@id/div3"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp" />
+
+        <SeekBar
+            android:id="@+id/seekBarSensitivity"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:min="5"
+            android:max="30"
+            android:progress="15"
+            android:progressTint="@color/primary"
+            android:thumbTint="@color/primary"
+            app:layout_constraintTop_toBottomOf="@id/tvSensitivityValue"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="4dp" />
+
+        <!-- Вибрация -->
+        <CheckBox
+            android:id="@+id/checkBoxVibrate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/vibrate_on_shake"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary"
+            android:buttonTint="@color/primary"
+            app:layout_constraintTop_toBottomOf="@id/seekBarSensitivity"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="24dp" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

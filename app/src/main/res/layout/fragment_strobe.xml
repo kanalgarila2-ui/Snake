@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp"
+    android:background="@color/background">
+
+    <TextView
+        android:id="@+id/tvStrobeStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Остановлен"
+        android:textSize="20sp"
+        android:textColor="@color/text_secondary" />
+
+    <TextView
+        android:id="@+id/tvStrobeHz"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="5 Hz"
+        android:textSize="64sp"
+        android:textStyle="bold"
+        android:textColor="@color/primary"
+        android:layout_marginTop="8dp" />
+
+    <SeekBar
+        android:id="@+id/seekBarStrobe"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:min="1"
+        android:max="20"
+        android:progress="5"
+        android:progressTint="@color/primary"
+        android:thumbTint="@color/primary"
+        android:layout_marginTop="24dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="1 Hz" android:textSize="11sp"
+            android:textColor="@color/text_secondary" />
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="20 Hz" android:textSize="11sp"
+            android:textColor="@color/text_secondary" android:gravity="end" />
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnStrobeToggle"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:text="▶ Старт"
+        android:textSize="20sp"
+        android:layout_marginTop="32dp" />
+
+    <TextView
+        android:id="@+id/tvStrobeHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:textColor="@color/text_secondary"
+        android:gravity="center"
+        android:layout_marginTop="16dp" />
+
+</LinearLayout>

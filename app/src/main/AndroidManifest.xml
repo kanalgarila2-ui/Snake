@@ -2,34 +2,53 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Разрешения на работу с сенсором в фоне -->
+    <!-- Сенсоры и фон -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-
-    <!-- Хранилище: до Android 11 -->
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-
-    <!-- Android 13+ медиа -->
-    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-
-    <!-- Уведомления (Android 13+) -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
-    <!-- Интернет (для GitHub Actions badge и т.д.) -->
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- WakeLock — чтобы сервис не засыпал -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-
-    <!-- Вибрация при тряске -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- Акселерометр — желательная фича -->
-    <uses-feature
-        android:name="android.hardware.sensor.accelerometer"
-        android:required="false" />
+    <!-- Аудио -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+
+    <!-- Хранилище -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+
+    <!-- Сеть -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
+    <!-- Камера -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Уведомления -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- SMS для SOS -->
+    <uses-permission android:name="android.permission.SEND_SMS" />
+
+    <!-- Геолокация для SOS -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Фонарик -->
+    <uses-permission android:name="android.permission.FLASHLIGHT" />
+
+    <!-- Виджет -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- Фичи -->
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.compass" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -38,35 +57,62 @@
         android:roundIcon="@drawable/ic_shake"
         android:supportsRtl="true"
         android:theme="@style/Theme.TryaskaFon"
+        android:largeHeap="true"
         tools:targetApi="34">
 
         <!-- Главная Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:screenOrientation="portrait">
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- Foreground Service детектора тряски -->
+        <!-- Foreground Service -->
         <service
             android:name=".service.ShakeDetectorService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
 
-        <!-- Broadcast receiver для событий тряски -->
-        <receiver
-            android:name=".receiver.ShakeBroadcastReceiver"
-            android:exported="false">
+        <!-- Broadcast receiver -->
+        <receiver android:name=".receiver.ShakeBroadcastReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="com.tryaskafon.shake.SHAKE_DETECTED" />
                 <action android:name="com.tryaskafon.shake.SERVICE_STOPPED" />
             </intent-filter>
         </receiver>
 
-    </application>
+        <!-- Виджет рабочего стола -->
+        <receiver
+            android:name=".widgets.ShakeWidgetProvider"
+            android:exported="true"
+            android:label="ТряскаФон Виджет">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/shake_widget_info" />
+        </receiver>
 
+        <!-- Boot receiver для виджета -->
+        <receiver android:name=".widgets.BootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Firebase Messaging -->
+        <service
+            android:name=".system.TryaskaFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+    </application>
 </manifest>

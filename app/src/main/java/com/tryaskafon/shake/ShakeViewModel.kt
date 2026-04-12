@@ -1,102 +1,122 @@
 package com.tryaskafon.shake
 
+import android.app.Application
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.tryaskafon.shake.repository.ConfigRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
- * ShakeViewModel — хранит UI-состояние между поворотами экрана.
- * Всё взаимодействие с UI идёт через LiveData.
+ * ShakeViewModel v2 — расширен, переключён на AndroidViewModel для доступа к контексту.
+ *
+ * ИСПРАВЛЕНИЕ #1: ProgressBar горит ВСЁ время воспроизведения.
+ * Теперь playbackVolume не сбрасывается через 1 сек — его сбрасывает AudioPlayer
+ * через колбэк onPlaybackStopped() когда MediaPlayer.onCompletion срабатывает.
+ *
+ * ИСПРАВЛЕНИЕ #2: Сохранение пути — больше не каждую мс.
+ * Используется debounce 10 секунд через корутину.
  */
-class ShakeViewModel : ViewModel() {
+class ShakeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val TAG = "ShakeViewModel"
+    private val repo = ConfigRepository(application)
 
-    // --- Путь к MP3 файлу ---
-    private val _filePath = MutableLiveData<String>("")
+    // ── Поля состояния ────────────────────────────────────────────────────────
+
+    private val _filePath = MutableLiveData(repo.loadFilePath())
     val filePath: LiveData<String> = _filePath
 
-    // --- Сервис запущен? ---
-    private val _isServiceRunning = MutableLiveData<Boolean>(false)
+    private val _isServiceRunning = MutableLiveData(false)
     val isServiceRunning: LiveData<Boolean> = _isServiceRunning
 
-    // --- Счётчик трясок ---
-    private val _shakeCount = MutableLiveData<Int>(0)
+    private val _shakeCount = MutableLiveData(0)
     val shakeCount: LiveData<Int> = _shakeCount
 
-    // --- Время последней тряски (unix ms, 0 = никогда) ---
-    private val _lastShakeTime = MutableLiveData<Long>(0L)
+    private val _lastShakeTime = MutableLiveData(0L)
     val lastShakeTime: LiveData<Long> = _lastShakeTime
 
-    // --- Чувствительность (5..30 м/с²) ---
-    private val _sensitivity = MutableLiveData<Int>(15)
+    private val _sensitivity = MutableLiveData(repo.loadSensitivity())
     val sensitivity: LiveData<Int> = _sensitivity
 
-    // --- Вибрировать при тряске ---
-    private val _vibrateEnabled = MutableLiveData<Boolean>(false)
+    private val _vibrateEnabled = MutableLiveData(repo.loadVibrateEnabled())
     val vibrateEnabled: LiveData<Boolean> = _vibrateEnabled
 
-    // --- Громкость воспроизведения (0..100, для ProgressBar) ---
-    private val _playbackVolume = MutableLiveData<Int>(0)
+    // ── ИСПРАВЛЕНИЕ #1: ProgressBar ──────────────────────────────────────────
+    // 0 = тихо, 1-100 = идёт воспроизведение
+    // Сбрасывается ТОЛЬКО через onPlaybackStopped(), не по таймеру
+    private val _playbackVolume = MutableLiveData(0)
     val playbackVolume: LiveData<Int> = _playbackVolume
 
-    /**
-     * Обновить путь к файлу.
-     * @param fromUi — если true, источник — EditText (не обновляем обратно, чтобы не было петли)
-     */
+    // Флаг: сейчас играет звук
+    private val _isPlaying = MutableLiveData(false)
+    val isPlaying: LiveData<Boolean> = _isPlaying
+
+    // ── ИСПРАВЛЕНИЕ #2: Debounce сохранения пути ─────────────────────────────
+    private var saveJob: Job? = null
+
     fun setFilePath(path: String, fromUi: Boolean = false) {
-        if (_filePath.value != path) {
-            _filePath.value = path
-            Log.d(TAG, "Путь обновлён: $path (fromUi=$fromUi)")
+        if (_filePath.value == path) return
+        _filePath.value = path
+        if (fromUi) scheduleSave(path)
+    }
+
+    private fun scheduleSave(path: String) {
+        // Отменяем предыдущий отложенный save, запускаем новый через 10 сек
+        saveJob?.cancel()
+        saveJob = viewModelScope.launch {
+            delay(10_000L)
+            repo.savePathImmediately(path)
+            Log.d(TAG, "Путь сохранён (debounce 10s): $path")
         }
     }
 
-    /** Установить чувствительность */
-    fun setSensitivity(value: Int) {
-        val clamped = value.coerceIn(5, 30)
-        _sensitivity.value = clamped
-        Log.d(TAG, "Чувствительность: $clamped м/с²")
+    /** Вызывается из AudioPlayer когда воспроизведение НАЧАЛОСЬ */
+    fun onPlaybackStarted() {
+        _isPlaying.postValue(true)
+        _playbackVolume.postValue(100)
+        Log.d(TAG, "Воспроизведение началось — ProgressBar ON")
     }
 
-    /** Включить/выключить вибрацию */
-    fun setVibrateEnabled(enabled: Boolean) {
-        _vibrateEnabled.value = enabled
-        Log.d(TAG, "Вибрация: $enabled")
+    /** Вызывается из AudioPlayer когда воспроизведение ЗАВЕРШИЛОСЬ */
+    fun onPlaybackStopped() {
+        _isPlaying.postValue(false)
+        _playbackVolume.postValue(0)
+        Log.d(TAG, "Воспроизведение закончилось — ProgressBar OFF")
     }
 
-    /** Вызывается при успешном запуске сервиса */
-    fun onServiceStarted() {
-        _isServiceRunning.value = true
-        Log.d(TAG, "Сервис запущен")
+    fun setSensitivity(v: Int) {
+        _sensitivity.value = v.coerceIn(5, 30)
+        repo.saveSensitivity(v)
     }
 
-    /** Вызывается при остановке сервиса (из UI или снаружи) */
+    fun setVibrateEnabled(e: Boolean) {
+        _vibrateEnabled.value = e
+        repo.saveVibrateEnabled(e)
+    }
+
+    fun onServiceStarted() { _isServiceRunning.value = true }
+
     fun onServiceStopped() {
         _isServiceRunning.value = false
-        // Сбрасываем громкость ProgressBar
         _playbackVolume.value = 0
-        Log.d(TAG, "Сервис остановлен")
+        _isPlaying.value = false
     }
 
-    /**
-     * Вызывается при получении события SHAKE_DETECTED от сервиса.
-     */
     fun onShakeDetected(timestamp: Long) {
         _lastShakeTime.value = timestamp
         _shakeCount.value = (_shakeCount.value ?: 0) + 1
-        // Имитируем "вспышку" на ProgressBar при тряске
-        _playbackVolume.value = 100
-        Log.d(TAG, "Тряска зафиксирована! Счётчик: ${_shakeCount.value}")
-
-        // Через 1 секунду сбрасываем ProgressBar обратно в 0
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            _playbackVolume.value = 0
-        }, 1000L)
+        Log.d(TAG, "Тряска! Счётчик: ${_shakeCount.value}")
     }
 
     override fun onCleared() {
         super.onCleared()
-        Log.d(TAG, "ViewModel очищена")
+        // Сохраняем немедленно при уничтожении ViewModel (закрытие приложения)
+        saveJob?.cancel()
+        _filePath.value?.let { repo.savePathImmediately(it) }
     }
 }

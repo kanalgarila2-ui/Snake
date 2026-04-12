@@ -1,44 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Название приложения -->
     <string name="app_name">ТряскаФон</string>
-    <string name="app_version">Версия 1.0 · TryaskaFon</string>
+    <string name="app_version">Версия 2.0 · TryaskaFon Max</string>
 
-    <!-- Главный экран -->
+    <!-- Тряска -->
     <string name="activate_detector">Активировать детектор тряски</string>
-    <string name="service_running">🟢 Сервис запущен — слушаю тряску</string>
+    <string name="service_running">🟢 Сервис запущен</string>
     <string name="service_stopped">🔴 Сервис остановлен</string>
-    <string name="no_accelerometer">⚠️ Акселерометр не найден на этом устройстве</string>
-
-    <!-- Файл -->
-    <string name="label_file_path">MP3 ФАЙЛ ДЛЯ ВОСПРОИЗВЕДЕНИЯ</string>
+    <string name="no_accelerometer">⚠️ Акселерометр не найден</string>
+    <string name="label_file_path">MP3 ФАЙЛ</string>
     <string name="hint_file_path">/storage/emulated/0/Music/sound.mp3</string>
     <string name="btn_pick_file">Выбрать файл</string>
-
-    <!-- Статистика -->
     <string name="last_shake_never">📳 Последняя тряска: никогда</string>
     <string name="last_shake_at">📳 Последняя тряска: %1$s</string>
     <string name="shake_count">🎵 Трясок всего: %1$d</string>
     <string name="shake_count_zero">🎵 Трясок всего: 0</string>
-
-    <!-- Громкость -->
-    <string name="label_volume">АКТИВНОСТЬ ВОСПРОИЗВЕДЕНИЯ</string>
-
-    <!-- Чувствительность -->
-    <string name="label_sensitivity">ЧУВСТВИТЕЛЬНОСТЬ</string>
-    <string name="sensitivity_hint">5 = очень чувствительно · 30 = только сильная тряска</string>
-
-    <!-- Вибрация -->
     <string name="vibrate_on_shake">Вибрировать при тряске</string>
-
-    <!-- Ошибки -->
     <string name="error_path_empty">Укажи путь к MP3 файлу</string>
     <string name="error_file_not_found">Файл не найден, выбери другой</string>
-    <string name="error_no_accelerometer">Нет акселерометра на этом устройстве</string>
+    <string name="sensitivity_hint">5 = очень чувствительно · 30 = сильная тряска</string>
 
-    <!-- Уведомление -->
+    <!-- Уведомления -->
     <string name="notification_channel_name">Детектор тряски</string>
-    <string name="notification_channel_desc">Уведомления о работе сервиса ТряскаФон</string>
-    <string name="notification_title">ТряскаФон активен 🔥</string>
     <string name="notification_stop">Stop</string>
+
+    <!-- Виджет -->
+    <string name="widget_description">Быстрое управление ТряскаФон</string>
 </resources>

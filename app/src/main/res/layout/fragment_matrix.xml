@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#000000">
+
+    <com.tryaskafon.shake.osint.MatrixView
+        android:id="@+id/matrixView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnMatrixToggle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="⏹ Стоп"
+        android:backgroundTint="#1A1A1A"
+        android:textColor="#00FF00"
+        android:layout_margin="8dp" />
+</LinearLayout>

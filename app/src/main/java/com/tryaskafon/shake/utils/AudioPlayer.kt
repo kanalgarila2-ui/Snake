@@ -7,182 +7,118 @@ import android.util.Log
 import java.io.File
 
 /**
- * AudioPlayer — обёртка над MediaPlayer для воспроизведения MP3 файла.
+ * AudioPlayer v2 — исправление ProgressBar.
  *
- * Поддерживает:
- * - Реальные пути к файлам (/storage/emulated/0/...)
- * - content:// URI (из файлового менеджера)
- * - Fallback на встроенный звук из assets
+ * Теперь принимает два колбэка:
+ *   onStarted() — вызывается когда MediaPlayer.start() срабатывает (ProgressBar = 100)
+ *   onStopped() — вызывается из onCompletion/onError (ProgressBar = 0)
  *
- * Потокобезопасность: play() вызывается из потока сенсора (через handler),
- * MediaPlayer операции — на главном потоке.
+ * Так ProgressBar горит РОВНО столько, сколько играет звук.
  */
 class AudioPlayer(private val context: Context) {
 
     private val TAG = "AudioPlayer"
-
-    // Текущий MediaPlayer — один, переиспользуем
     private var mediaPlayer: MediaPlayer? = null
-
-    // Handler для операций на главном потоке
     private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
 
-    /**
-     * Воспроизвести звук из [filePath].
-     * @param filePath — путь к файлу или content:// URI строкой
-     * @param onError — колбэк при ошибке (опционально)
-     */
+    // Колбэки для ViewModel
+    var onPlaybackStarted: (() -> Unit)? = null
+    var onPlaybackStopped: (() -> Unit)? = null
+
     fun play(filePath: String, onError: ((String) -> Unit)? = null) {
-        // Переносим на главный поток — MediaPlayer требует Looper
-        mainHandler.post {
-            playOnMainThread(filePath, onError)
-        }
+        mainHandler.post { playOnMain(filePath, onError) }
     }
 
-    private fun playOnMainThread(filePath: String, onError: ((String) -> Unit)?) {
+    private fun playOnMain(filePath: String, onError: ((String) -> Unit)?) {
         try {
-            // Освобождаем предыдущий плеер если есть
             releaseInternal()
-
             val player = MediaPlayer()
 
-            // Определяем источник звука
             when {
-                filePath.startsWith("content://") -> {
-                    // content:// URI
-                    val uri = Uri.parse(filePath)
-                    player.setDataSource(context, uri)
-                    Log.d(TAG, "Источник: content URI = $filePath")
-                }
-                filePath.startsWith("file://") -> {
-                    // file:// URI
-                    val uri = Uri.parse(filePath)
-                    player.setDataSource(context, uri)
-                    Log.d(TAG, "Источник: file URI = $filePath")
-                }
-                filePath.isNotEmpty() && File(filePath).exists() -> {
-                    // Реальный путь к файлу
-                    player.setDataSource(filePath)
-                    Log.d(TAG, "Источник: реальный путь = $filePath")
-                }
+                filePath.startsWith("content://") -> player.setDataSource(context, Uri.parse(filePath))
+                filePath.startsWith("file://")    -> player.setDataSource(context, Uri.parse(filePath))
+                filePath.isNotEmpty() && File(filePath).exists() -> player.setDataSource(filePath)
                 else -> {
-                    // Fallback — встроенный звук из assets
-                    Log.w(TAG, "Файл не найден ($filePath), используем встроенный звук")
-                    playFromAssets(player, onError)
+                    playFromAssets(MediaPlayer(), onError)
                     return
                 }
             }
 
             player.setOnPreparedListener { mp ->
-                Log.d(TAG, "MediaPlayer готов, запускаем воспроизведение")
+                Log.d(TAG, "Готов, запускаем")
                 mp.start()
+                onPlaybackStarted?.invoke()   // ← ProgressBar ВКЛ
             }
 
             player.setOnCompletionListener { mp ->
-                Log.d(TAG, "Воспроизведение завершено")
+                Log.d(TAG, "Завершено")
                 mp.release()
                 mediaPlayer = null
+                onPlaybackStopped?.invoke()   // ← ProgressBar ВЫКЛ
             }
 
             player.setOnErrorListener { mp, what, extra ->
-                val msg = "MediaPlayer ошибка: what=$what, extra=$extra"
+                val msg = "MediaPlayer ошибка: what=$what extra=$extra"
                 Log.e(TAG, msg)
                 onError?.invoke(msg)
                 mp.release()
                 mediaPlayer = null
-                true // Обработали ошибку
-            }
-
-            mediaPlayer = player
-            player.prepareAsync() // Асинхронная подготовка
-
-        } catch (e: IllegalArgumentException) {
-            val msg = "Неверный путь к файлу: ${e.message}"
-            Log.e(TAG, msg, e)
-            onError?.invoke(msg)
-            playFallback(onError)
-        } catch (e: SecurityException) {
-            val msg = "Нет доступа к файлу: ${e.message}"
-            Log.e(TAG, msg, e)
-            onError?.invoke(msg)
-        } catch (e: Exception) {
-            val msg = "Ошибка AudioPlayer: ${e.message}"
-            Log.e(TAG, msg, e)
-            onError?.invoke(msg)
-            playFallback(onError)
-        }
-    }
-
-    /**
-     * Воспроизведение встроенного звука из assets/default_sound.mp3.
-     */
-    private fun playFromAssets(player: MediaPlayer, onError: ((String) -> Unit)?) {
-        try {
-            val afd = context.assets.openFd("default_sound.mp3")
-            player.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-            afd.close()
-
-            player.setOnPreparedListener { mp ->
-                Log.d(TAG, "Assets MediaPlayer готов")
-                mp.start()
-            }
-            player.setOnCompletionListener { mp ->
-                mp.release()
-                mediaPlayer = null
-            }
-            player.setOnErrorListener { mp, what, extra ->
-                Log.e(TAG, "Assets MediaPlayer ошибка: what=$what, extra=$extra")
-                onError?.invoke("Assets ошибка: $what/$extra")
-                mp.release()
-                mediaPlayer = null
+                onPlaybackStopped?.invoke()   // ← ProgressBar ВЫКЛ даже при ошибке
                 true
             }
 
             mediaPlayer = player
             player.prepareAsync()
+
         } catch (e: Exception) {
-            Log.e(TAG, "Ошибка воспроизведения из assets: ${e.message}", e)
-            onError?.invoke("Fallback звук тоже недоступен: ${e.message}")
-            player.release()
+            Log.e(TAG, "play() exception: ${e.message}", e)
+            onError?.invoke(e.message ?: "unknown")
+            onPlaybackStopped?.invoke()
         }
     }
 
-    /**
-     * Пробуем запустить fallback (новый экземпляр MediaPlayer из assets).
-     */
-    private fun playFallback(onError: ((String) -> Unit)?) {
+    private fun playFromAssets(player: MediaPlayer, onError: ((String) -> Unit)?) {
         try {
-            val fallbackPlayer = MediaPlayer()
-            playFromAssets(fallbackPlayer, onError)
+            context.assets.openFd("default_sound.mp3").use { afd ->
+                player.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+            }
+            player.setOnPreparedListener { mp ->
+                mp.start()
+                onPlaybackStarted?.invoke()
+            }
+            player.setOnCompletionListener { mp ->
+                mp.release()
+                mediaPlayer = null
+                onPlaybackStopped?.invoke()
+            }
+            player.setOnErrorListener { mp, what, extra ->
+                onError?.invoke("assets error $what/$extra")
+                mp.release()
+                mediaPlayer = null
+                onPlaybackStopped?.invoke()
+                true
+            }
+            mediaPlayer = player
+            player.prepareAsync()
         } catch (e: Exception) {
-            Log.e(TAG, "Fallback тоже не сработал: ${e.message}", e)
+            Log.e(TAG, "assets fallback failed: ${e.message}")
+            onError?.invoke(e.message ?: "assets error")
+            player.release()
+            onPlaybackStopped?.invoke()
         }
     }
 
-    /**
-     * Освободить текущий MediaPlayer (внутренний, без переноса на поток).
-     */
     private fun releaseInternal() {
         try {
-            mediaPlayer?.let { mp ->
-                if (mp.isPlaying) mp.stop()
-                mp.release()
-                Log.d(TAG, "Предыдущий MediaPlayer освобождён")
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Ошибка освобождения предыдущего MediaPlayer: ${e.message}")
-        } finally {
-            mediaPlayer = null
-        }
+            mediaPlayer?.let { if (it.isPlaying) it.stop(); it.release() }
+        } catch (_: Exception) {}
+        mediaPlayer = null
     }
 
-    /**
-     * Освободить ресурсы (вызывается при уничтожении сервиса).
-     */
     fun release() {
         mainHandler.post {
             releaseInternal()
-            Log.d(TAG, "AudioPlayer полностью освобождён")
+            onPlaybackStopped?.invoke()
         }
     }
 }

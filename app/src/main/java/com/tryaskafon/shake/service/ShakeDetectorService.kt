@@ -1,22 +1,10 @@
 package com.tryaskafon.shake.service
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
+import android.app.*
 import android.content.Context
 import android.content.Intent
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
-import android.os.Build
-import android.os.IBinder
-import android.os.PowerManager
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
+import android.hardware.*
+import android.os.*
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.tryaskafon.shake.MainActivity
@@ -24,368 +12,163 @@ import com.tryaskafon.shake.R
 import com.tryaskafon.shake.utils.AudioPlayer
 import kotlin.math.sqrt
 
-/**
- * ShakeDetectorService — Foreground Service, который слушает акселерометр и
- * воспроизводит звук при обнаружении тряски.
- *
- * Не останавливается при сворачивании приложения.
- * Остановить можно только через Switch в UI или кнопку "Stop" в уведомлении.
- */
 class ShakeDetectorService : Service(), SensorEventListener {
 
     private val TAG = "ShakeDetectorService"
 
-    // --- Константы ---
     companion object {
-        const val CHANNEL_ID = "shake_detector"
-        const val NOTIFICATION_ID = 1001
-        const val NOTIFICATION_SHAKE_ID = 1002
+        const val CHANNEL_ID       = "shake_detector"
+        const val NOTIFICATION_ID  = 1001
+        const val EXTRA_FILE_PATH  = "extra_file_path"
+        const val EXTRA_SENSITIVITY= "extra_sensitivity"
+        const val EXTRA_VIBRATE    = "extra_vibrate"
+        const val EXTRA_TIMESTAMP  = "extra_timestamp"
+        const val ACTION_SHAKE_DETECTED   = "com.tryaskafon.shake.SHAKE_DETECTED"
+        const val ACTION_SERVICE_STOPPED  = "com.tryaskafon.shake.SERVICE_STOPPED"
+        const val ACTION_PLAYBACK_STARTED = "com.tryaskafon.shake.PLAYBACK_STARTED"
+        const val ACTION_PLAYBACK_STOPPED = "com.tryaskafon.shake.PLAYBACK_STOPPED"
+        const val ACTION_STOP_SERVICE     = "com.tryaskafon.shake.STOP_SERVICE"
 
-        // Ключи для Intent extras
-        const val EXTRA_FILE_PATH = "extra_file_path"
-        const val EXTRA_SENSITIVITY = "extra_sensitivity"
-        const val EXTRA_VIBRATE = "extra_vibrate"
-        const val EXTRA_TIMESTAMP = "extra_timestamp"
+        // Статический флаг — для виджета
+        @Volatile var isRunning = false
 
-        // Broadcast actions
-        const val ACTION_SHAKE_DETECTED = "com.tryaskafon.shake.SHAKE_DETECTED"
-        const val ACTION_SERVICE_STOPPED = "com.tryaskafon.shake.SERVICE_STOPPED"
-        const val ACTION_STOP_SERVICE = "com.tryaskafon.shake.STOP_SERVICE"
-
-        /**
-         * Запустить сервис с параметрами.
-         */
-        fun start(context: Context, filePath: String, sensitivity: Int, vibrateEnabled: Boolean) {
-            val intent = Intent(context, ShakeDetectorService::class.java).apply {
+        fun start(ctx: Context, filePath: String, sensitivity: Int, vibrateEnabled: Boolean) {
+            val intent = Intent(ctx, ShakeDetectorService::class.java).apply {
                 putExtra(EXTRA_FILE_PATH, filePath)
                 putExtra(EXTRA_SENSITIVITY, sensitivity)
                 putExtra(EXTRA_VIBRATE, vibrateEnabled)
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ctx.startForegroundService(intent)
+            else ctx.startService(intent)
         }
 
-        /**
-         * Остановить сервис.
-         */
-        fun stop(context: Context) {
-            context.stopService(Intent(context, ShakeDetectorService::class.java))
-        }
+        fun stop(ctx: Context) = ctx.stopService(Intent(ctx, ShakeDetectorService::class.java))
     }
 
-    // --- Системные сервисы ---
     private lateinit var sensorManager: SensorManager
     private var accelerometer: Sensor? = null
     private lateinit var notificationManager: NotificationManager
-
-    // WakeLock — чтобы CPU не засыпал во время работы сервиса
+    private lateinit var audioPlayer: AudioPlayer
     private var wakeLock: PowerManager.WakeLock? = null
 
-    // Проигрыватель звука
-    private lateinit var audioPlayer: AudioPlayer
+    private var filePath = ""
+    private var sensitivity = 15f
+    private var vibrateEnabled = false
 
-    // --- Параметры из Intent ---
-    private var filePath: String = ""
-    private var sensitivity: Float = 15f
-    private var vibrateEnabled: Boolean = false
-
-    // --- Антиспам тряски ---
-    // Флаг: мы сейчас "в состоянии тряски" и не должны реагировать повторно
-    @Volatile
-    private var isShaking = false
-
-    // Handler для сброса isShaking через 1 секунду
-    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
-    private val resetShakingRunnable = Runnable {
-        isShaking = false
-        Log.d(TAG, "isShaking сброшен — готов к следующей тряске")
-    }
+    @Volatile private var isShaking = false
+    private val handler = Handler(Looper.getMainLooper())
+    private val resetShaking = Runnable { isShaking = false }
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "onCreate")
+        isRunning = true
+        super.onCreate()
+        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+        accelerometer  = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-        // Инициализация SensorManager и акселерометра
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-
-        if (accelerometer == null) {
-            Log.e(TAG, "Акселерометр не найден! Сервис будет работать вхолостую.")
+        audioPlayer = AudioPlayer(this).apply {
+            // ИСПРАВЛЕНИЕ: колбэки для ProgressBar
+            onPlaybackStarted = { sendBroadcast(Intent(ACTION_PLAYBACK_STARTED).apply { setPackage(packageName) }) }
+            onPlaybackStopped = { sendBroadcast(Intent(ACTION_PLAYBACK_STOPPED).apply { setPackage(packageName) }) }
         }
 
-        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        audioPlayer = AudioPlayer(this)
-
-        // Создаём канал уведомлений (только Android 8+)
         createNotificationChannel()
 
-        // WakeLock — CPU не спит пока сервис активен
         try {
-            val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-            wakeLock = powerManager.newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK,
-                "TryaskaFon::ShakeWakeLock"
-            ).also {
-                it.acquire(12 * 60 * 60 * 1000L) // Максимум 12 часов
-            }
-            Log.d(TAG, "WakeLock получен")
-        } catch (e: Exception) {
-            Log.e(TAG, "Ошибка получения WakeLock: ${e.message}", e)
-        }
+            val pm = getSystemService(POWER_SERVICE) as PowerManager
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "TryaskaFon::ShakeWakeLock")
+            wakeLock?.acquire(12 * 60 * 60 * 1000L)
+        } catch (e: Exception) { Log.e(TAG, "WakeLock: ${e.message}") }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "onStartCommand, action=${intent?.action}")
-
-        // Обрабатываем кнопку "Stop" из уведомления
         if (intent?.action == ACTION_STOP_SERVICE) {
-            Log.d(TAG, "Получена команда остановки из уведомления")
-            broadcastServiceStopped()
+            sendBroadcast(Intent(ACTION_SERVICE_STOPPED).apply { setPackage(packageName) })
             stopSelf()
             return START_NOT_STICKY
         }
-
-        // Читаем параметры из Intent
         intent?.let {
-            filePath = it.getStringExtra(EXTRA_FILE_PATH) ?: ""
-            sensitivity = it.getIntExtra(EXTRA_SENSITIVITY, 15).toFloat()
+            filePath       = it.getStringExtra(EXTRA_FILE_PATH) ?: ""
+            sensitivity    = it.getIntExtra(EXTRA_SENSITIVITY, 15).toFloat()
             vibrateEnabled = it.getBooleanExtra(EXTRA_VIBRATE, false)
         }
-
-        Log.d(TAG, "Параметры: filePath=$filePath, sensitivity=$sensitivity, vibrate=$vibrateEnabled")
-
-        // Запускаем foreground с уведомлением
-        startForeground(NOTIFICATION_ID, buildMainNotification())
-
-        // Регистрируем слушатель акселерометра
-        accelerometer?.let { sensor ->
-            sensorManager.registerListener(
-                this,
-                sensor,
-                SensorManager.SENSOR_DELAY_UI // ~20000 мкс = 50 Hz
-            )
-            Log.d(TAG, "Слушатель акселерометра зарегистрирован (SENSOR_DELAY_UI)")
-        } ?: Log.e(TAG, "Акселерометр null, слушатель не зарегистрирован")
-
-        // Сервис перезапустится при убийстве системой с последним Intent
+        startForeground(NOTIFICATION_ID, buildNotification())
+        accelerometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI) }
         return START_REDELIVER_INTENT
     }
 
-    /**
-     * Главный метод сенсора — вызывается ~50 раз в секунду.
-     * Вычисляем magnitude, сравниваем с порогом, реагируем на тряску.
-     */
     override fun onSensorChanged(event: SensorEvent?) {
         event ?: return
         if (event.sensor.type != Sensor.TYPE_ACCELEROMETER) return
-
-        val x = event.values[0]
-        val y = event.values[1]
-        val z = event.values[2]
-
-        // Вычисляем magnitude вектора ускорения
-        val magnitude = sqrt(x * x + y * y + z * z)
-
-        // Лог на уровне VERBOSE — не замусориваем, включается только при отладке
-        // Log.v(TAG, "Magnitude: $magnitude (порог: $sensitivity)")
-
-        if (magnitude > sensitivity && !isShaking) {
-            // ТРЯСКА ОБНАРУЖЕНА!
+        val (x, y, z) = event.values
+        val mag = sqrt(x * x + y * y + z * z)
+        if (mag > sensitivity && !isShaking) {
             isShaking = true
-            val timestamp = System.currentTimeMillis()
-            Log.i(TAG, "ТРЯСКА! magnitude=$magnitude > sensitivity=$sensitivity")
-
-            // 1. Воспроизводим звук (асинхронно через AudioPlayer)
-            audioPlayer.play(filePath) { error ->
-                Log.e(TAG, "Ошибка воспроизведения: $error")
-            }
-
-            // 2. Вибрация (если включена)
-            if (vibrateEnabled) {
-                performVibration()
-            }
-
-            // 3. Broadcast → MainActivity для обновления счётчика
-            broadcastShakeDetected(timestamp)
-
-            // 4. Обновляем уведомление "Тряска! 🎵"
-            showShakeNotification()
-
-            // 5. Через 1 секунду сбрасываем флаг (антиспам)
-            handler.removeCallbacks(resetShakingRunnable)
-            handler.postDelayed(resetShakingRunnable, 1000L)
+            val ts = System.currentTimeMillis()
+            audioPlayer.play(filePath)
+            if (vibrateEnabled) vibrate()
+            sendBroadcast(Intent(ACTION_SHAKE_DETECTED).apply {
+                putExtra(EXTRA_TIMESTAMP, ts)
+                setPackage(packageName)
+            })
+            handler.removeCallbacks(resetShaking)
+            handler.postDelayed(resetShaking, 1000L)
         }
     }
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        Log.d(TAG, "Точность сенсора изменилась: $accuracy")
-    }
-
-    override fun onBind(intent: Intent?): IBinder? = null
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+    override fun onBind(intent: Intent?) = null
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "onDestroy — освобождаем ресурсы")
-
-        // Отменяем слушатель сенсора
-        try {
-            sensorManager.unregisterListener(this)
-        } catch (e: Exception) {
-            Log.w(TAG, "Ошибка отмены слушателя: ${e.message}")
-        }
-
-        // Освобождаем WakeLock
-        try {
-            wakeLock?.let {
-                if (it.isHeld) it.release()
-            }
-            Log.d(TAG, "WakeLock освобождён")
-        } catch (e: Exception) {
-            Log.w(TAG, "Ошибка освобождения WakeLock: ${e.message}")
-        }
-
-        // Освобождаем AudioPlayer (MediaPlayer)
-        try {
-            audioPlayer.release()
-        } catch (e: Exception) {
-            Log.w(TAG, "Ошибка освобождения AudioPlayer: ${e.message}")
-        }
-
-        // Убираем отложенные колбэки
+        isRunning = false
+        try { sensorManager.unregisterListener(this) } catch (_: Exception) {}
+        try { if (wakeLock?.isHeld == true) wakeLock?.release() } catch (_: Exception) {}
+        try { audioPlayer.release() } catch (_: Exception) {}
         handler.removeCallbacksAndMessages(null)
     }
 
-    // -------------------------------------------------------------------------
-    // Приватные методы
-    // -------------------------------------------------------------------------
-
-    /**
-     * Создаём канал уведомлений для Android 8+.
-     */
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Детектор тряски",
-                NotificationManager.IMPORTANCE_LOW // Без звука, чтобы не мешать
-            ).apply {
-                description = "Уведомления о работе сервиса ТряскаФон"
-                setShowBadge(false)
-            }
-            notificationManager.createNotificationChannel(channel)
-            Log.d(TAG, "Канал уведомлений создан: $CHANNEL_ID")
-        }
-    }
-
-    /**
-     * Строим основное persistent-уведомление сервиса.
-     */
-    private fun buildMainNotification(): Notification {
-        // Intent для открытия MainActivity при тапе на уведомление
-        val openAppIntent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-        }
-        val openAppPi = PendingIntent.getActivity(
-            this, 0, openAppIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        // Intent для кнопки "Stop" в уведомлении
-        val stopIntent = Intent(this, ShakeDetectorService::class.java).apply {
-            action = ACTION_STOP_SERVICE
-        }
-        val stopPi = PendingIntent.getService(
-            this, 1, stopIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
+    private fun buildNotification(): Notification {
+        val openPi = PendingIntent.getActivity(this, 0,
+            Intent(this, MainActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_SINGLE_TOP },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val stopPi = PendingIntent.getService(this, 1,
+            Intent(this, ShakeDetectorService::class.java).apply { action = ACTION_STOP_SERVICE },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("ТряскаФон активен 🔥")
-            .setContentText("Жду тряску... Порог: ${sensitivity.toInt()} м/с²")
+            .setContentText("Порог: ${sensitivity.toInt()} м/с²")
             .setSmallIcon(R.drawable.ic_shake)
-            .setContentIntent(openAppPi)
-            .setOngoing(true) // Нельзя смахнуть пальцем
+            .setContentIntent(openPi)
+            .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .addAction(R.drawable.ic_stop, "Stop", stopPi)
             .build()
     }
 
-    /**
-     * Показываем краткое уведомление "Тряска обнаружена!".
-     */
-    private fun showShakeNotification() {
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Тряска! 🎵")
-            .setContentText("Воспроизвожу звук...")
-            .setSmallIcon(R.drawable.ic_shake)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setAutoCancel(true)
-            .setTimeoutAfter(3000L) // Само исчезнет через 3 сек
-            .build()
-
-        try {
-            notificationManager.notify(NOTIFICATION_SHAKE_ID, notification)
-        } catch (e: Exception) {
-            Log.w(TAG, "Ошибка показа уведомления тряски: ${e.message}")
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notificationManager.createNotificationChannel(
+                NotificationChannel(CHANNEL_ID, "Детектор тряски", NotificationManager.IMPORTANCE_LOW)
+            )
         }
     }
 
-    /**
-     * Отправляем Broadcast с событием SHAKE_DETECTED.
-     */
-    private fun broadcastShakeDetected(timestamp: Long) {
-        val intent = Intent(ACTION_SHAKE_DETECTED).apply {
-            putExtra(EXTRA_TIMESTAMP, timestamp)
-            setPackage(packageName) // Только наше приложение получит broadcast
-        }
-        sendBroadcast(intent)
-        Log.d(TAG, "Broadcast SHAKE_DETECTED отправлен, timestamp=$timestamp")
-    }
-
-    /**
-     * Отправляем Broadcast с событием SERVICE_STOPPED (при остановке через уведомление).
-     */
-    private fun broadcastServiceStopped() {
-        val intent = Intent(ACTION_SERVICE_STOPPED).apply {
-            setPackage(packageName)
-        }
-        sendBroadcast(intent)
-        Log.d(TAG, "Broadcast SERVICE_STOPPED отправлен")
-    }
-
-    /**
-     * Вибрация по паттерну: пауза 0ms, виб 100ms, пауза 50ms, виб 100ms.
-     */
-    private fun performVibration() {
+    private fun vibrate() {
         try {
             val pattern = longArrayOf(0L, 100L, 50L, 100L)
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                // Android 12+ — используем VibratorManager
-                val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                val vibrator = vibratorManager.defaultVibrator
-                val effect = VibrationEffect.createWaveform(pattern, -1)
-                vibrator.vibrate(effect)
+                (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager)
+                    .defaultVibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                // Android 8-11
                 @Suppress("DEPRECATION")
-                val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                val effect = VibrationEffect.createWaveform(pattern, -1)
-                vibrator.vibrate(effect)
+                (getSystemService(VIBRATOR_SERVICE) as Vibrator)
+                    .vibrate(VibrationEffect.createWaveform(pattern, -1))
             } else {
-                // Android 7
                 @Suppress("DEPRECATION")
-                val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                @Suppress("DEPRECATION")
-                vibrator.vibrate(pattern, -1)
+                (getSystemService(VIBRATOR_SERVICE) as Vibrator).vibrate(pattern, -1)
             }
-            Log.d(TAG, "Вибрация запущена")
-        } catch (e: Exception) {
-            Log.e(TAG, "Ошибка вибрации: ${e.message}", e)
-        }
+        } catch (e: Exception) { Log.e(TAG, "Vibrate: ${e.message}") }
     }
 }

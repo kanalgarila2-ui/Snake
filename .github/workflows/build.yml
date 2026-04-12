@@ -1,16 +1,11 @@
-name: Build TryaskaFon APK
+name: Build TryaskaFon Max APK
 
 on:
-  # Запуск при пуше в main
   push:
     branches: [ "main" ]
-    # Запуск при создании тега версии (для релиза)
-    tags:
-      - 'v*'
-  # Запуск при Pull Request
+    tags: [ "v*" ]
   pull_request:
     branches: [ "main" ]
-  # Ручной запуск через GitHub UI
   workflow_dispatch:
 
 jobs:
@@ -19,11 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Чекаут кода
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Установка Java 17
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -31,66 +24,43 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # 3. Установка Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # 4. Кэшируем Gradle зависимости для ускорения сборки
-      - name: Cache Gradle packages
+      - name: Cache Gradle
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          restore-keys: ${{ runner.os }}-gradle-
 
-      # 5. Скачиваем gradle-wrapper.jar если отсутствует
-      - name: Download gradle-wrapper.jar if missing
-        run: |
-          JAR="gradle/wrapper/gradle-wrapper.jar"
-          if [ ! -f "$JAR" ]; then
-            echo "gradle-wrapper.jar not found, downloading..."
-            curl -fsSL "https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar" -o "$JAR"
-            echo "Downloaded successfully"
-          else
-            echo "gradle-wrapper.jar already exists, skipping"
-          fi
-
-      # 6. Даём права на запуск gradlew
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 7. Сборка Debug APK
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
 
-      # 7. Загружаем APK как артефакт сборки
-      - name: Upload Debug APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-${{ github.sha }}
+          name: TryaskaFonMax-debug-${{ github.sha }}
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
           if-no-files-found: error
 
   release:
-    name: Create GitHub Release
+    name: GitHub Release
     runs-on: ubuntu-latest
-    # Запускаем только при пуше тега v*
     if: startsWith(github.ref, 'refs/tags/v')
     needs: build
-
     permissions:
       contents: write
 
     steps:
-      # 1. Чекаут
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # 2. Java 17
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -98,59 +68,44 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # 3. Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # 4. Права
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 4.5 Скачиваем jar если нет
-      - name: Download gradle-wrapper.jar if missing
-        run: |
-          JAR="gradle/wrapper/gradle-wrapper.jar"
-          if [ ! -f "$JAR" ]; then
-            echo "gradle-wrapper.jar not found, downloading..."
-            curl -fsSL "https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar" -o "$JAR"
-            echo "Downloaded successfully"
-          else
-            echo "gradle-wrapper.jar already exists, skipping"
-          fi
-
-      # 5. Сборка Release APK (без подписи — debug-подпись)
-      - name: Build Release APK
+      - name: Build APK
         run: ./gradlew assembleDebug --stacktrace
 
-      # 6. Переименовываем APK с версией тега
       - name: Rename APK
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
           cp app/build/outputs/apk/debug/app-debug.apk \
-             app/build/outputs/apk/debug/TryaskaFon-${VERSION}.apk
-          echo "APK_PATH=app/build/outputs/apk/debug/TryaskaFon-${VERSION}.apk" >> $GITHUB_ENV
+             app/build/outputs/apk/debug/TryaskaFonMax-${VERSION}.apk
+          echo "APK_PATH=app/build/outputs/apk/debug/TryaskaFonMax-${VERSION}.apk" >> $GITHUB_ENV
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
-      # 7. Создаём GitHub Release и заливаем APK
-      - name: Create GitHub Release
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.VERSION }}
-          name: "ТряскаФон ${{ env.VERSION }}"
+          name: "ТряскаФон Max ${{ env.VERSION }}"
           body: |
-            ## ТряскаФон ${{ env.VERSION }}
-            
+            ## ТряскаФон Max ${{ env.VERSION }}
+
+            ### 🆕 Что нового в v2
+            - BottomNavigationView: 5 разделов
+            - 🎮 Игры: Кубик 3D, Рулетка, Угадайка, Гонки, Змейка, 2048
+            - 📡 Инфо: Шумомер, Wi-Fi, Погода, Валюты, Мой IP, Матрица
+            - 🎵 Медиа: Плеер, Диктофон, Рингтон, OCR, ChatGPT
+            - 🔧 Ещё: Стробоскоп, Компас+Уровень, Секундомер, Морзянка, Тамагочи, QR, SOS
+            - 🐛 Исправлен ProgressBar воспроизведения
+            - 🐛 Убрано синхронное сохранение каждую мс
+            - 📱 Виджет рабочего стола
+
             ### Установка
-            1. Скачать `TryaskaFon-${{ env.VERSION }}.apk`
-            2. Разрешить установку из неизвестных источников
-            3. Установить APK
-            
-            ### Что нового
-            - Детектор тряски через акселерометр
-            - Воспроизведение MP3 при тряске
-            - Foreground Service (работает в фоне)
-            - Настройка чувствительности
-            - Вибрация при тряске
+            1. Скачать APK ниже
+            2. Настройки → Безопасность → Неизвестные источники
+            3. Установить
           files: ${{ env.APK_PATH }}
           draft: false
           prerelease: false

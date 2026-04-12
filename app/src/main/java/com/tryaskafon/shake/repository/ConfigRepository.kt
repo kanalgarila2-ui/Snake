@@ -3,117 +3,73 @@ package com.tryaskafon.shake.repository
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
-import java.io.BufferedWriter
 import java.io.File
-import java.io.FileWriter
 
 /**
- * ConfigRepository — хранит настройки приложения.
- *
- * ВАЖНО: savePathImmediately() пишет СИНХРОННО (commit + файл).
- * Это намеренно по ТЗ — сохранение при каждом символе в EditText.
- * Да, это блокирует UI поток. Да, мы это знаем. Таково ТЗ.
+ * ConfigRepository v2.
+ * savePathImmediately() вызывается только:
+ *   - при debounce-таймере через 10 сек после последнего изменения
+ *   - при onCleared() ViewModel (закрытие приложения)
+ * Больше НЕ вызывается при каждом символе — телефон не тормозит.
  */
 class ConfigRepository(private val context: Context) {
 
     private val TAG = "ConfigRepository"
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences("tryaskafon_prefs", Context.MODE_PRIVATE)
 
-    private val prefs: SharedPreferences = context.getSharedPreferences(
-        PREFS_NAME, Context.MODE_PRIVATE
-    )
-
-    // Директория для файла с путём
-    private val saveDir: File by lazy {
-        File(android.os.Environment.getExternalStorageDirectory(), "TryaskaFon").also { dir ->
-            if (!dir.exists()) {
-                val created = dir.mkdirs()
-                Log.d(TAG, "Директория TryaskaFon создана: $created → ${dir.absolutePath}")
-            }
+    private val saveDir by lazy {
+        File(android.os.Environment.getExternalStorageDirectory(), "TryaskaFon").also {
+            if (!it.exists()) it.mkdirs()
         }
     }
-
-    private val pathFile: File by lazy {
-        File(saveDir, "last_path.txt")
-    }
+    private val pathFile by lazy { File(saveDir, "last_path.txt") }
 
     companion object {
-        private const val PREFS_NAME = "tryaskafon_prefs"
-        private const val KEY_FILE_PATH = "file_path"
+        private const val KEY_FILE_PATH   = "file_path"
         private const val KEY_SENSITIVITY = "sensitivity"
-        private const val KEY_VIBRATE = "vibrate_enabled"
+        private const val KEY_VIBRATE     = "vibrate_enabled"
+        private const val KEY_THEME       = "app_theme"
+        private const val KEY_CHAT_KEY    = "chatgpt_api_key"
+        private const val KEY_WEATHER_KEY = "weather_api_key"
     }
 
-    /**
-     * Сохранить путь к файлу НЕМЕДЛЕННО и СИНХРОННО.
-     * - SharedPreferences.commit() (блокирующий, не apply)
-     * - Запись в файл через BufferedWriter с flush()
-     *
-     * Вызывается при каждом изменении текста в EditText (afterTextChanged).
-     * По ТЗ это должно происходить "каждую 1 мс" — на практике столько раз,
-     * сколько раз срабатывает TextWatcher.
-     */
+    /** Синхронное сохранение — вызывается редко (не каждую мс) */
     fun savePathImmediately(path: String) {
-        // 1. SharedPreferences.commit() — синхронная запись на диск
-        val commitResult = prefs.edit()
-            .putString(KEY_FILE_PATH, path)
-            .commit() // commit, не apply!
-        Log.v(TAG, "SharedPreferences.commit() → $commitResult, path=$path")
-
-        // 2. Запись в файл /sdcard/TryaskaFon/last_path.txt
+        prefs.edit().putString(KEY_FILE_PATH, path).commit()
         try {
-            // Создаём директорию если нет
             if (!saveDir.exists()) saveDir.mkdirs()
-
-            // BufferedWriter с autoFlush через явный flush после write
-            BufferedWriter(FileWriter(pathFile, false)).use { writer ->
-                writer.write(path)
-                writer.flush() // Принудительный сброс буфера
-            }
-            Log.v(TAG, "Файл записан: ${pathFile.absolutePath}")
-        } catch (e: SecurityException) {
-            Log.w(TAG, "Нет доступа к хранилищу для записи файла: ${e.message}")
-            // Не краш — просто логируем, SharedPreferences всё равно сохранены
+            pathFile.writeText(path)
+            Log.d(TAG, "Путь сохранён: $path")
         } catch (e: Exception) {
-            Log.e(TAG, "Ошибка записи в файл: ${e.message}", e)
+            Log.w(TAG, "Ошибка записи в файл: ${e.message}")
         }
     }
 
-    /**
-     * Загрузить сохранённый путь к файлу.
-     */
     fun loadFilePath(): String {
-        // Сначала пробуем прочитать из файла (он актуальнее при внешнем редактировании)
         return try {
             if (pathFile.exists()) {
-                val fromFile = pathFile.readText().trim()
-                if (fromFile.isNotEmpty()) {
-                    Log.d(TAG, "Путь загружен из файла: $fromFile")
-                    return fromFile
-                }
+                val t = pathFile.readText().trim()
+                if (t.isNotEmpty()) return t
             }
-            // Fallback — SharedPreferences
-            val fromPrefs = prefs.getString(KEY_FILE_PATH, "") ?: ""
-            Log.d(TAG, "Путь загружен из SharedPreferences: $fromPrefs")
-            fromPrefs
+            prefs.getString(KEY_FILE_PATH, "") ?: ""
         } catch (e: Exception) {
-            Log.e(TAG, "Ошибка загрузки пути: ${e.message}", e)
             prefs.getString(KEY_FILE_PATH, "") ?: ""
         }
     }
 
-    /** Сохранить чувствительность (обычным apply — не критично) */
-    fun saveSensitivity(value: Int) {
-        prefs.edit().putInt(KEY_SENSITIVITY, value).apply()
-    }
+    fun saveSensitivity(v: Int) = prefs.edit().putInt(KEY_SENSITIVITY, v).apply()
+    fun loadSensitivity() = prefs.getInt(KEY_SENSITIVITY, 15)
 
-    /** Загрузить чувствительность */
-    fun loadSensitivity(): Int = prefs.getInt(KEY_SENSITIVITY, 15)
+    fun saveVibrateEnabled(e: Boolean) = prefs.edit().putBoolean(KEY_VIBRATE, e).apply()
+    fun loadVibrateEnabled() = prefs.getBoolean(KEY_VIBRATE, false)
 
-    /** Сохранить флаг вибрации */
-    fun saveVibrateEnabled(enabled: Boolean) {
-        prefs.edit().putBoolean(KEY_VIBRATE, enabled).apply()
-    }
+    fun saveTheme(theme: String) = prefs.edit().putString(KEY_THEME, theme).apply()
+    fun loadTheme() = prefs.getString(KEY_THEME, "light") ?: "light"
 
-    /** Загрузить флаг вибрации */
-    fun loadVibrateEnabled(): Boolean = prefs.getBoolean(KEY_VIBRATE, false)
+    fun saveChatGptKey(key: String) = prefs.edit().putString(KEY_CHAT_KEY, key).apply()
+    fun loadChatGptKey() = prefs.getString(KEY_CHAT_KEY, "") ?: ""
+
+    fun saveWeatherKey(key: String) = prefs.edit().putString(KEY_WEATHER_KEY, key).apply()
+    fun loadWeatherKey() = prefs.getString(KEY_WEATHER_KEY, "") ?: ""
 }

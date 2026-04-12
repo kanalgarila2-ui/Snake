@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/background">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        app:hintTextColor="@color/primary"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etQrText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Текст или ссылка для QR"
+            android:imeOptions="actionDone" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGenerateQr"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="⬛ Создать QR"
+            android:layout_marginEnd="4dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnScanQr"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="📷 Сканировать"
+            android:layout_marginStart="4dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            app:strokeColor="@color/primary"
+            android:textColor="@color/primary"
+            xmlns:app="http://schemas.android.com/apk/res-auto" />
+    </LinearLayout>
+
+    <!-- Превью сгенерированного QR -->
+    <ImageView
+        android:id="@+id/ivQrCode"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        android:contentDescription="QR код" />
+
+    <TextView
+        android:id="@+id/tvQrResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Результат сканирования появится здесь"
+        android:textSize="14sp"
+        android:textColor="@color/text_primary"
+        android:layout_marginTop="12dp"
+        android:textIsSelectable="true"
+        android:lineSpacingMultiplier="1.4" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnCopyQr"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📋 Скопировать результат"
+        android:layout_marginTop="8dp"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        app:strokeColor="@color/primary"
+        android:textColor="@color/primary"
+        xmlns:app="http://schemas.android.com/apk/res-auto" />
+
+</LinearLayout>
