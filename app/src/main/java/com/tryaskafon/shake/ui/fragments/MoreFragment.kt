@@ -16,7 +16,7 @@ class MoreFragment : Fragment() {
     private val tabs = listOf(
         "🔦 Стробо"   to { StrobeLightFragment() as Fragment },
         "📡 Компас"   to { CompassFragment() as Fragment },
-        "⏱ Секундомер"to { StopwatchFragment() as Fragment },
+        "⏱ Секундомер" to { StopwatchFragment() as Fragment },
         "🔤 Морзе"    to { MorseFragment() as Fragment },
         "🐾 Тамагочи" to { TamagotchiFragment() as Fragment },
         "📱 QR"       to { QrFragment() as Fragment },
@@ -35,6 +35,10 @@ class MoreFragment : Fragment() {
             override fun createFragment(pos: Int) = tabs[pos].second()
         }
         TabLayoutMediator(b.tabLayout, b.viewPager) { tab, pos -> tab.text = tabs[pos].first }.attach()
+    }
+
+    override fun onDestroyView() { super.onDestroyView(); _b = null }
+}        TabLayoutMediator(b.tabLayout, b.viewPager) { tab, pos -> tab.text = tabs[pos].first }.attach()
     }
 
     override fun onDestroyView() { super.onDestroyView(); _b = null }
