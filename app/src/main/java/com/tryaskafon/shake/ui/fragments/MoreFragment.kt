@@ -21,7 +21,7 @@ class MoreFragment : Fragment() {
         "🐾 Тамагочи" to { TamagotchiFragment() as Fragment },
         "📱 QR"       to { QrFragment() as Fragment },
         "🤖 SOS"      to { SosFragment() as Fragment },
-        "⚙️ Настройки" to { SettingsFragment() as Fragment }
+        "⚙ Настройки" to { SettingsFragment() as Fragment }
     )
 
     override fun onCreateView(i: LayoutInflater, c: ViewGroup?, s: Bundle?): View {
@@ -35,10 +35,6 @@ class MoreFragment : Fragment() {
             override fun createFragment(pos: Int) = tabs[pos].second()
         }
         TabLayoutMediator(b.tabLayout, b.viewPager) { tab, pos -> tab.text = tabs[pos].first }.attach()
-    }
-
-    override fun onDestroyView() { super.onDestroyView(); _b = null }
-}        TabLayoutMediator(b.tabLayout, b.viewPager) { tab, pos -> tab.text = tabs[pos].first }.attach()
     }
 
     override fun onDestroyView() { super.onDestroyView(); _b = null }
