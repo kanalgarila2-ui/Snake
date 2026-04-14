@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="16dp" android:background="@color/background">
+    <TextView android:id="@+id/tvCurrentNote" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="—" android:textSize="48sp" android:textStyle="bold" android:textColor="@color/primary"
+        android:gravity="center" />
+    <TextView android:id="@+id/tvPianoScale" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textSize="13sp" android:textColor="@color/text_secondary" android:gravity="center"
+        android:layout_marginTop="8dp" android:fontFamily="monospace" />
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="@color/divider" android:layout_marginVertical="12dp" />
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="МЕЛОДИЯ:" android:textSize="11sp" android:textColor="@color/text_secondary"
+        android:textAllCaps="true" />
+    <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:layout_marginTop="4dp">
+        <TextView android:id="@+id/tvMelody" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textSize="13sp" android:textColor="@color/text_primary" android:fontFamily="monospace"
+            android:lineSpacingMultiplier="1.4" />
+    </ScrollView>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:layout_marginTop="8dp">
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnPianoPlay"
+            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="▶ Воспроизвести" android:layout_marginEnd="4dp" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnPianoClear"
+            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="🗑 Очистить" android:layout_marginStart="4dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            app:strokeColor="@color/divider" android:textColor="@color/text_secondary"
+            xmlns:app="http://schemas.android.com/apk/res-auto" />
+    </LinearLayout>
+    <TextView android:id="@+id/tvPianoHint" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textSize="12sp" android:textColor="@color/text_secondary" android:gravity="center"
+        android:layout_marginTop="8dp" />
+</LinearLayout>

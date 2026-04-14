@@ -14,14 +14,15 @@ class MoreFragment : Fragment() {
     private val b get() = _b!!
 
     private val tabs = listOf(
-        "🔦 Стробо"   to { StrobeLightFragment() as Fragment },
-        "📡 Компас"   to { CompassFragment() as Fragment },
-        "⏱ Секундомер"to { StopwatchFragment() as Fragment },
-        "🔤 Морзе"    to { MorseFragment() as Fragment },
-        "🐾 Тамагочи" to { TamagotchiFragment() as Fragment },
-        "📱 QR"       to { QrFragment() as Fragment },
-        "🤖 SOS"      to { SosFragment() as Fragment },
-        "⚙️ Настройки" to { SettingsFragment() as Fragment }
+        "🔦 Стробо"    to { StrobeLightFragment() as Fragment },
+        "📍 Компас"    to { CompassFragment() as Fragment },
+        "⏱ Секундомер" to { StopwatchFragment() as Fragment },
+        "🔤 Морзе"     to { MorseFragment() as Fragment },
+        "🐾 Тамагочи"  to { TamagotchiFragment() as Fragment },
+        "📱 QR"        to { QrFragment() as Fragment },
+        "🆘 SOS"       to { SosFragment() as Fragment },
+        "🔐 Пароли"    to { PasswordGeneratorFragment() as Fragment },
+        "⚙ Настройки"  to { SettingsFragment() as Fragment }
     )
 
     override fun onCreateView(i: LayoutInflater, c: ViewGroup?, s: Bundle?): View {

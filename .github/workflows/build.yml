@@ -39,6 +39,12 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Download real gradle-wrapper.jar
+        run: |
+          curl -fL \
+            "https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar" \
+            -o gradle/wrapper/gradle-wrapper.jar
+
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
 
@@ -74,6 +80,12 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Download real gradle-wrapper.jar
+        run: |
+          curl -fL \
+            "https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar" \
+            -o gradle/wrapper/gradle-wrapper.jar
+
       - name: Build APK
         run: ./gradlew assembleDebug --stacktrace
 
@@ -91,21 +103,7 @@ jobs:
           name: "ТряскаФон Max ${{ env.VERSION }}"
           body: |
             ## ТряскаФон Max ${{ env.VERSION }}
-
-            ### 🆕 Что нового в v2
-            - BottomNavigationView: 5 разделов
-            - 🎮 Игры: Кубик 3D, Рулетка, Угадайка, Гонки, Змейка, 2048
-            - 📡 Инфо: Шумомер, Wi-Fi, Погода, Валюты, Мой IP, Матрица
-            - 🎵 Медиа: Плеер, Диктофон, Рингтон, OCR, ChatGPT
-            - 🔧 Ещё: Стробоскоп, Компас+Уровень, Секундомер, Морзянка, Тамагочи, QR, SOS
-            - 🐛 Исправлен ProgressBar воспроизведения
-            - 🐛 Убрано синхронное сохранение каждую мс
-            - 📱 Виджет рабочего стола
-
-            ### Установка
-            1. Скачать APK ниже
-            2. Настройки → Безопасность → Неизвестные источники
-            3. Установить
+            Скачай APK ниже и установи (разреши неизвестные источники).
           files: ${{ env.APK_PATH }}
           draft: false
           prerelease: false

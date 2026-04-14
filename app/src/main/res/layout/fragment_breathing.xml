@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:gravity="center" android:padding="24dp" android:background="@color/background">
+    <View android:id="@+id/breathCircle" android:layout_width="160dp" android:layout_height="160dp"
+        android:background="@drawable/ic_health" android:backgroundTint="#4CAF50" />
+    <TextView android:id="@+id/tvBreathPhase" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="Готов" android:textSize="28sp" android:textStyle="bold" android:textColor="@color/primary"
+        android:layout_marginTop="24dp" android:gravity="center" />
+    <TextView android:id="@+id/tvBreathCycles" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="Циклов: 0" android:textSize="16sp" android:textColor="@color/text_secondary" android:layout_marginTop="8dp" />
+    <ProgressBar android:id="@+id/progressBreath" style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent" android:layout_height="12dp"
+        android:progressTint="@color/primary" android:layout_marginTop="16dp" />
+    <com.google.android.material.button.MaterialButton android:id="@+id/btnBreathToggle"
+        android:layout_width="match_parent" android:layout_height="60dp"
+        android:text="▶ Начать" android:textSize="18sp" android:layout_marginTop="24dp" />
+    <TextView android:id="@+id/tvBreathHint" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textSize="12sp" android:textColor="@color/text_secondary" android:gravity="center"
+        android:layout_marginTop="12dp" android:lineSpacingMultiplier="1.4" />
+</LinearLayout>

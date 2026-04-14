@@ -26,4 +26,6 @@
 
     <!-- Виджет -->
     <string name="widget_description">Быстрое управление ТряскаФон</string>
+    <string name="ocr_placeholder">Результат появится здесь</string>
 </resources>
+<!-- Нет — это не конец strings.xml, нужно вставить перед </resources> -->

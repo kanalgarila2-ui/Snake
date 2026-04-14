@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/background">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="20dp">
+        <TextView android:id="@+id/tvCalorieHint" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textSize="13sp" android:textColor="@color/text_secondary" android:layout_marginBottom="12dp" />
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent"
+            android:layout_height="wrap_content" style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:hint="Вес (кг)" app:hintTextColor="@color/primary" android:layout_marginBottom="8dp"
+            xmlns:app="http://schemas.android.com/apk/res-auto">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/etCalWeight"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:inputType="numberDecimal" android:text="70" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent"
+            android:layout_height="wrap_content" style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:hint="Рост (см)" app:hintTextColor="@color/primary" android:layout_marginBottom="8dp"
+            xmlns:app="http://schemas.android.com/apk/res-auto">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/etCalHeight"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:inputType="number" android:text="175" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent"
+            android:layout_height="wrap_content" style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:hint="Возраст" app:hintTextColor="@color/primary" android:layout_marginBottom="8dp"
+            xmlns:app="http://schemas.android.com/apk/res-auto">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/etCalAge"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:inputType="number" android:text="25" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <RadioGroup android:id="@+id/rgGender" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginBottom="8dp">
+            <RadioButton android:id="@+id/rbMale" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="♂ Мужчина" android:checked="true" android:buttonTint="@color/primary" />
+            <RadioButton android:id="@+id/rbFemale" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="♀ Женщина" android:buttonTint="@color/primary" android:layout_marginStart="16dp" />
+        </RadioGroup>
+        <Spinner android:id="@+id/spinnerActivity" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:entries="@array/activity_levels" android:layout_marginBottom="12dp" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnCalcCalories"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🔥 Рассчитать" />
+        <TextView android:id="@+id/tvCalorieResult" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textSize="14sp" android:textColor="@color/text_primary" android:fontFamily="monospace"
+            android:lineSpacingMultiplier="1.5" android:layout_marginTop="16dp" />
+    </LinearLayout>
+</ScrollView>

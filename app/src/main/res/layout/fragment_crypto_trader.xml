@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/background">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="16dp">
+        <TextView android:id="@+id/tvTraderPrices" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textSize="18sp" android:textStyle="bold" android:textColor="@color/primary" android:fontFamily="monospace" />
+        <TextView android:id="@+id/tvTraderPortfolio" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textSize="14sp" android:textColor="@color/text_primary" android:fontFamily="monospace"
+            android:lineSpacingMultiplier="1.5" android:layout_marginTop="12dp" android:background="@color/surface" android:padding="12dp" />
+        <com.google.android.material.textfield.TextInputEditText android:id="@+id/etTradeAmount"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:hint="Сумма USD" android:inputType="numberDecimal" android:text="100" android:layout_marginTop="12dp" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="8dp">
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnBuyBtc" android:layout_width="0dp"
+                android:layout_height="wrap_content" android:layout_weight="1" android:text="🟢 BTC" android:backgroundTint="#4CAF50" android:layout_marginEnd="4dp" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnSellBtc" android:layout_width="0dp"
+                android:layout_height="wrap_content" android:layout_weight="1" android:text="🔴 BTC" android:backgroundTint="#F44336" android:layout_marginStart="4dp" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnBuyEth" android:layout_width="0dp"
+                android:layout_height="wrap_content" android:layout_weight="1" android:text="🟢 ETH" android:backgroundTint="#4CAF50" android:layout_marginEnd="4dp" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/btnSellEth" android:layout_width="0dp"
+                android:layout_height="wrap_content" android:layout_weight="1" android:text="🔴 ETH" android:backgroundTint="#F44336" android:layout_marginStart="4dp" />
+        </LinearLayout>
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnResetTrader"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="↺ Сброс (10000$)" android:layout_marginTop="8dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            app:strokeColor="@color/divider" android:textColor="@color/text_secondary"
+            xmlns:app="http://schemas.android.com/apk/res-auto" />
+        <TextView android:id="@+id/tvTradeLog" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textSize="14sp" android:textColor="@color/primary" android:gravity="center" android:layout_marginTop="8dp" />
+    </LinearLayout>
+</ScrollView>

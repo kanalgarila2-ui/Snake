@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:gravity="center" android:padding="24dp" android:background="@color/background">
+    <TextView android:id="@+id/tvBigNumber" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="?" android:textSize="72sp" android:textStyle="bold" android:textColor="@color/primary"
+        android:gravity="center" android:fontFamily="monospace" />
+    <TextView android:id="@+id/tvNumberFact" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textSize="14sp" android:textColor="@color/text_secondary" android:gravity="center"
+        android:layout_marginTop="8dp" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:layout_marginTop="24dp">
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="0dp"
+            android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="8dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:hint="Мин" app:hintTextColor="@color/primary" xmlns:app="http://schemas.android.com/apk/res-auto">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/etRngMin"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:inputType="number" android:text="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.TextInputLayout android:layout_width="0dp"
+            android:layout_height="wrap_content" android:layout_weight="1"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:hint="Макс" app:hintTextColor="@color/primary" xmlns:app="http://schemas.android.com/apk/res-auto">
+            <com.google.android.material.textfield.TextInputEditText android:id="@+id/etRngMax"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:inputType="number" android:text="1000000" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+    <com.google.android.material.button.MaterialButton android:id="@+id/btnGenerate"
+        android:layout_width="match_parent" android:layout_height="64dp"
+        android:text="🎲 Случайное число" android:textSize="18sp" android:layout_marginTop="16dp" />
+    <TextView android:id="@+id/tvRngHint" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textSize="12sp" android:textColor="@color/text_secondary" android:gravity="center"
+        android:layout_marginTop="8dp" />
+</LinearLayout>

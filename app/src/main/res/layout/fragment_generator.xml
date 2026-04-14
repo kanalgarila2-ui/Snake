@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:gravity="center" android:padding="24dp" android:background="@color/background">
+    <TextView android:id="@+id/tvGeneratorTitle" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:textSize="24sp" android:textStyle="bold" android:textColor="@color/primary" android:gravity="center" />
+    <TextView android:id="@+id/tvGeneratorHint" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textSize="13sp" android:textColor="@color/text_secondary" android:gravity="center"
+        android:layout_marginTop="8dp" />
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="@color/divider" android:layout_marginVertical="20dp" />
+    <TextView android:id="@+id/tvGeneratedText" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textSize="18sp" android:textColor="@color/text_primary" android:gravity="center"
+        android:lineSpacingMultiplier="1.4" android:textIsSelectable="true" android:minHeight="100dp" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:layout_marginTop="24dp">
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnGenerate"
+            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="🎲 Генерировать" android:layout_marginEnd="8dp" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnCopyGenerated"
+            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="📋 Копировать"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            app:strokeColor="@color/primary" android:textColor="@color/primary"
+            xmlns:app="http://schemas.android.com/apk/res-auto" />
+    </LinearLayout>
+</LinearLayout>

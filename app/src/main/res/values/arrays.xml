@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="activity_levels">
+        <item>Сидячий образ жизни</item>
+        <item>Лёгкая активность (1-3 дня/нед)</item>
+        <item>Умеренная (3-5 дней/нед)</item>
+        <item>Высокая (6-7 дней/нед)</item>
+        <item>Очень высокая (спортсмен)</item>
+    </string-array>
+</resources>

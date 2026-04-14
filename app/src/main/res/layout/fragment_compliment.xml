@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:gravity="center" android:padding="24dp" android:background="@color/background">
+    <TextView android:id="@+id/tvComplimentText" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textSize="18sp" android:textColor="@color/text_primary" android:gravity="center"
+        android:lineSpacingMultiplier="1.4" android:textIsSelectable="true" android:minHeight="120dp" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:layout_marginTop="24dp">
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnCompliment"
+            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="😊 Комплимент" android:backgroundTint="#4CAF50" android:layout_marginEnd="4dp" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnInsult"
+            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="😈 Оскорбление" android:backgroundTint="#F44336" android:layout_marginStart="4dp" />
+    </LinearLayout>
+    <com.google.android.material.button.MaterialButton android:id="@+id/btnCopyCompliment"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="📋 Скопировать" android:layout_marginTop="8dp"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        app:strokeColor="@color/primary" android:textColor="@color/primary"
+        xmlns:app="http://schemas.android.com/apk/res-auto" />
+    <TextView android:id="@+id/tvComplimentHint" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textSize="11sp" android:textColor="@color/text_secondary" android:gravity="center"
+        android:layout_marginTop="12dp" />
+</LinearLayout>
